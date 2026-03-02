@@ -4,21 +4,29 @@ POST /api/codex/v1/data  → stores content (handles multipart/raw), returns fak
 GET  /api/codex/v1/data/<cid>/network/stream → returns stored content
 """
 from http.server import HTTPServer, BaseHTTPRequestHandler
-import hashlib, json, io, cgi
+import hashlib, json, io, re
 
 store = {}
 
 def extract_file_from_multipart(content_type, body):
-    environ = {
-        'REQUEST_METHOD': 'POST',
-        'CONTENT_TYPE': content_type,
-        'CONTENT_LENGTH': str(len(body)),
-    }
-    fs = cgi.FieldStorage(fp=io.BytesIO(body), environ=environ, keep_blank_values=True)
-    for key in fs.keys():
-        field = fs[key]
-        if hasattr(field, 'file') and field.file:
-            return field.file.read()
+    """Extract file bytes from multipart/form-data without using cgi module."""
+    # Parse boundary from Content-Type header
+    m = re.search(r'boundary=([^\s;]+)', content_type)
+    if not m:
+        return body
+    boundary = ('--' + m.group(1)).encode()
+    # Split body on boundary
+    parts = body.split(boundary)
+    for part in parts[1:]:  # skip preamble
+        if part in (b'--', b'--\r\n', b'\r\n--'):
+            continue
+        # Split headers from body on double CRLF
+        if b'\r\n\r\n' in part:
+            _, content = part.split(b'\r\n\r\n', 1)
+            # Strip trailing boundary marker
+            content = content.rstrip(b'\r\n').rstrip(b'--')
+            if content:
+                return content
     return body
 
 class Handler(BaseHTTPRequestHandler):
