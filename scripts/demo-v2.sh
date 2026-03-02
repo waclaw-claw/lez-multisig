@@ -432,7 +432,7 @@ INFO_OUT=$("$REGISTRY_CLI" info \
 echo "$INFO_OUT"
 
 # Extract IDL CID from info output
-IDL_CID=$(echo "$INFO_OUT" | grep 'IDL CID' | awk '{print $NF}')
+IDL_CID=$(echo "$INFO_OUT" | grep 'IDL CID' | awk '{print $NF}' | tr -d '[:space:]')
 [[ -n "$IDL_CID" ]] || err "No IDL CID found in registry entry"
 echo ""
 ok "IDL CID: $IDL_CID"
