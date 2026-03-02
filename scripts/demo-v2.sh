@@ -50,7 +50,7 @@ mkdir -p "$NSSA_WALLET_HOME_DIR"
 
 STORAGE_URL="http://127.0.0.1:8080"
 MOCK_CODEX_PY="$MULTISIG_DIR/scripts/mock-codex.py"
-TOKEN_IDL_LOCAL="$REGISTRY_DIR/registry-idl.json"
+TOKEN_IDL_LOCAL="$MULTISIG_DIR/scripts/token-idl.json"
 MULTISIG_IDL="$MULTISIG_DIR/lez-multisig-ffi/src/multisig_idl.json"
 DOWNLOADED_IDL="/tmp/lez-token-idl-from-registry.json"
 
@@ -482,7 +482,7 @@ echo -e "      --sender-holding-account $MULTISIG_VAULT_PDA \\"
 echo -e "      --recipient-holding-account $RECIPIENT${RESET}"
 
 DRY_RUN_OUT=$("$MULTISIG_CLI" \
-  --idl     "$DOWNLOADED_IDL" \
+  --idl     "$TOKEN_IDL_LOCAL" \
   --program "$TOKEN_BIN" \
   --dry-run \
   transfer \
