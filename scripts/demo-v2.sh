@@ -170,7 +170,7 @@ curl -s --max-time 3 "${SEQUENCER_URL}" > /dev/null 2>&1 \
 ok "Sequencer restarted and ready"
 
 # Start Codex storage — use real node if already running, else start mock
-if curl -sf "$STORAGE_URL/" > /dev/null 2>&1; then
+if curl -s --max-time 2 "$STORAGE_URL/" -o /dev/null 2>/dev/null; then
   ok "Logos Storage already running at $STORAGE_URL (real node)"
 else
   pkill -f mock-codex.py 2>/dev/null || true
