@@ -169,15 +169,27 @@ curl -s --max-time 3 "${SEQUENCER_URL}" > /dev/null 2>&1 \
   || err "Sequencer failed to start after reset"
 ok "Sequencer restarted and ready"
 
-# Start Codex storage — use real node if already running, else start mock
-if curl -s --max-time 2 "$STORAGE_URL/" -o /dev/null 2>/dev/null; then
-  ok "Logos Storage already running at $STORAGE_URL (real node)"
+# Start Codex storage — prefer real Docker node, fall back to mock
+CODEX_DATADIR="${CODEX_DATADIR:-$HOME/codex-datadir}"
+if curl -s --max-time 2 "$STORAGE_URL/api/storage/v1/debug/info" -o /dev/null 2>/dev/null; then
+  ok "Logos Storage already running at $STORAGE_URL"
+elif command -v docker &>/dev/null && docker info &>/dev/null 2>&1; then
+  docker kill $(docker ps -q) 2>/dev/null || true
+  mkdir -p "$CODEX_DATADIR"
+  nohup docker run --rm     -v "$CODEX_DATADIR":/datadir     -p 8080:8080     --entrypoint /usr/local/bin/storage     codexstorage/nim-codex:latest     --data-dir=/datadir --nat=none     --api-cors-origin="*" --api-bindaddr=0.0.0.0 --api-port=8080     > /tmp/codex.log 2>&1 &
+  echo "  Waiting for Logos Storage node..."
+  for i in $(seq 1 15); do
+    curl -s --max-time 1 "$STORAGE_URL/api/storage/v1/debug/info" -o /dev/null 2>/dev/null && break
+    sleep 1
+  done
+  curl -s --max-time 2 "$STORAGE_URL/api/storage/v1/debug/info" -o /dev/null 2>/dev/null     || err "Logos Storage Docker node failed to start"
+  ok "Logos Storage node started (Docker) at $STORAGE_URL"
 else
   pkill -f mock-codex.py 2>/dev/null || true
   nohup python3 "$MOCK_CODEX_PY" > /tmp/mock-codex.log 2>&1 &
   sleep 1
-  curl -sf "$STORAGE_URL/" > /dev/null 2>&1 || { err "Mock Codex failed to start"; }
-  ok "Mock Codex storage running at $STORAGE_URL"
+  curl -s --max-time 2 "$STORAGE_URL/" -o /dev/null 2>/dev/null || { err "Mock Codex failed to start"; }
+  ok "Mock Codex storage running at $STORAGE_URL (no Docker available)"
 fi
 sleep 1
 
