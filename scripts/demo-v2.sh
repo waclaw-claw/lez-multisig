@@ -330,9 +330,7 @@ CREATE_OUT=$("$MULTISIG_CLI" \
     --create-key              "$CREATE_KEY" \
     --threshold               2 \
     --members                 "$M1_HEX,$M2_HEX,$M3_HEX" \
-    --member-accounts-account "$M1_ACCOUNT" \
-    --member-accounts-account "$M2_ACCOUNT" \
-    --member-accounts-account "$M3_ACCOUNT" 2>&1) || true
+    --member-accounts-account "$M1_ACCOUNT,$M2_ACCOUNT,$M3_ACCOUNT" 2>&1) || true
 
 echo "$CREATE_OUT"
 
