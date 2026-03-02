@@ -311,6 +311,9 @@ echo -e "  ${DIM}    $M3_HEX${RESET}"
 
 echo ""
 
+# Fresh uninitialized account to hold the member list on-chain
+read MEMBER_ACCOUNTS_ACCOUNT _ <<< $(new_account "member-accounts-$SUFFIX")
+
 CREATE_KEY="demo-$SUFFIX"
 export CREATE_KEY MULTISIG_PROGRAM_ID
 
@@ -319,7 +322,7 @@ echo "  Create key : $CREATE_KEY"
 echo ""
 
 echo -e "  ${CYAN}$ ${BOLD}multisig create-multisig --create-key $CREATE_KEY --threshold 2 \\"
-echo -e "      --members $M1_HEX --members $M2_HEX --members $M3_HEX${RESET}"
+echo -e "      --members $M1_HEX,$M2_HEX,$M3_HEX${RESET}"
 
 CREATE_OUT=$("$MULTISIG_CLI" \
   --idl     "$IDL" \
@@ -327,12 +330,8 @@ CREATE_OUT=$("$MULTISIG_CLI" \
   create-multisig \
     --create-key              "$CREATE_KEY" \
     --threshold               2 \
-    --members                 "$M1_HEX" \
-    --members                 "$M2_HEX" \
-    --members                 "$M3_HEX" \
-    --member-accounts-account "$M1_ACCOUNT" \
-    --member-accounts-account "$M2_ACCOUNT" \
-    --member-accounts-account "$M3_ACCOUNT" 2>&1) || true
+    --members                 "$M1_HEX,$M2_HEX,$M3_HEX" \
+    --member-accounts-account "$MEMBER_ACCOUNTS_ACCOUNT" 2>&1) || true
 
 echo "$CREATE_OUT"
 
